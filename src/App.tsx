@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Book, 
@@ -13,59 +13,93 @@ import {
   Instagram, 
   Pin as Pinterest, 
   ExternalLink,
-  Search,
-  BookOpen
+  ChevronRight,
+  Mail,
+  ArrowRight,
+  Info
 } from 'lucide-react';
 
 // Types
-interface Product {
+interface Variant {
   id: string;
-  model: number;
   size: string;
   pages: number;
-  emoji: string;
+}
+
+interface Model {
+  id: number;
+  name: string;
+  image: string;
+  sizes: string[];
+  pageRange: string;
+  variants: Variant[];
   color: string;
 }
 
-// Data: 18 products as requested
-const PRODUCTS: Product[] = [
-  // Model 1
-  { id: 'm1-1', model: 1, size: '6x9', pages: 102, emoji: '🍲', color: '#A0522D' },
-  { id: 'm1-2', model: 1, size: '6x9', pages: 202, emoji: '🥗', color: '#A0522D' },
-  { id: 'm1-3', model: 1, size: '8x10', pages: 132, emoji: '🥧', color: '#A0522D' },
-  { id: 'm1-4', model: 1, size: '8x10', pages: 152, emoji: '🥘', color: '#A0522D' },
-  { id: 'm1-5', model: 1, size: '8.5x11', pages: 122, emoji: '🥣', color: '#A0522D' },
-  { id: 'm1-6', model: 1, size: '8.5x11', pages: 202, emoji: '🍳', color: '#A0522D' },
+// Generate the variants data
+const SIZES = ['6x9', '8x10', '8.5x11'];
+const PAGES = [102, 122, 132, 152, 202];
 
-  // Model 2
-  { id: 'm2-1', model: 2, size: '6x9', pages: 122, emoji: '🍝', color: '#5A5A40' },
-  { id: 'm2-2', model: 2, size: '6x9', pages: 152, emoji: '🥟', color: '#5A5A40' },
-  { id: 'm2-3', model: 2, size: '8x10', pages: 102, emoji: '🍛', color: '#5A5A40' },
-  { id: 'm2-4', model: 2, size: '8x10', pages: 202, emoji: '🍱', color: '#5A5A40' },
-  { id: 'm2-5', model: 2, size: '8.5x11', pages: 132, emoji: '🍜', color: '#5A5A40' },
-  { id: 'm2-6', model: 2, size: '8.5x11', pages: 152, emoji: '🍣', color: '#5A5A40' },
+const generateVariants = (modelId: number): Variant[] => {
+  const v: Variant[] = [];
+  SIZES.forEach(size => {
+    PAGES.forEach(pages => {
+      v.push({
+        id: `m${modelId}-${size}-${pages}`,
+        size,
+        pages
+      });
+    });
+  });
+  return v;
+};
 
-  // Model 3
-  { id: 'm3-1', model: 3, size: '6x9', pages: 202, emoji: '🥙', color: '#8B4513' },
-  { id: 'm3-2', model: 3, size: '6x9', pages: 132, emoji: '🧆', color: '#8B4513' },
-  { id: 'm3-3', model: 3, size: '8x10', pages: 122, emoji: '🌮', color: '#8B4513' },
-  { id: 'm3-4', model: 3, size: '8x10', pages: 152, emoji: '🌯', color: '#8B4513' },
-  { id: 'm3-5', model: 3, size: '8.5x11', pages: 102, emoji: '🥨', color: '#8B4513' },
-  { id: 'm3-6', model: 3, size: '8.5x11', pages: 202, emoji: '🥐', color: '#8B4513' },
+const MODELS: Model[] = [
+  {
+    id: 1,
+    name: 'Modelo 1 - Clásico Floral',
+    image: 'https://i.ibb.co/pBdM3rJK/1-modelo-recetas.jpg',
+    sizes: SIZES,
+    pageRange: '102 a 202',
+    variants: generateVariants(1),
+    color: '#A0522D' // Terracotta
+  },
+  {
+    id: 2,
+    name: 'Modelo 2 - Minimal Olive',
+    image: 'https://i.ibb.co/0Vq1Wfxz/2-modelo-recetas.jpg',
+    sizes: SIZES,
+    pageRange: '102 a 202',
+    variants: generateVariants(2),
+    color: '#5A5A40' // Olive
+  },
+  {
+    id: 3,
+    name: 'Modelo 3 - Vintage Kraft',
+    image: 'https://i.ibb.co/QjtQSm2b/3-modelo-recetas.jpg',
+    sizes: SIZES,
+    pageRange: '102 a 202',
+    variants: generateVariants(3),
+    color: '#8B4513' // Brown
+  }
 ];
 
-const SIZES = ['Todos los tamaños', '6x9', '8x10', '8.5x11'];
+const FILTER_OPTIONS = ['Todos los modelos', 'Modelo 1', 'Modelo 2', 'Modelo 3'];
 
 export default function App() {
-  const [filter, setFilter] = useState('Todos los tamaños');
+  const [activeFilter, setActiveFilter] = useState('Todos los modelos');
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const filteredProducts = useMemo(() => {
-    if (filter === 'Todos los tamaños') return PRODUCTS;
-    return PRODUCTS.filter(p => p.size === filter);
-  }, [filter]);
+  // Scroll to active filter button if needed
+  useEffect(() => {
+    const activeButton = scrollContainerRef.current?.querySelector(`[data-active="true"]`);
+    if (activeButton) {
+      activeButton.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+  }, [activeFilter]);
 
   const handleAmazonClick = (name: string) => {
-    alert(`Enlace a Amazon para ${name} - sustituir por URL real`);
+    alert(`Redirigiendo a Amazon para: ${name}\n(Sustituir por URL real del afiliado)`);
   };
 
   const handleSocialClick = (platform: string) => {
@@ -73,168 +107,222 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f0] font-sans text-stone-800">
+    <div className="min-h-screen bg-[#f5f5f0] font-sans text-stone-800 selection:bg-[#A0522D]/20">
       {/* Texture Overlay */}
-      <div className="fixed inset-0 pointer-events-none opacity-5 bg-[url('https://www.transparenttextures.com/patterns/canvas-orange.png')]"></div>
+      <div className="fixed inset-0 pointer-events-none opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] z-50"></div>
 
-      {/* Header */}
-      <header className="relative py-16 px-4 bg-[#FAFAF9] border-b border-stone-200">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl text-[#5A5A40] mb-4 tracking-tight">
-              📖 DIARIOS DE RECETAS
-            </h1>
-            <p className="text-xl md:text-2xl font-serif italic text-[#A0522D] mb-6">
-              Elige la versión que mejor se adapte a tu cocina
-            </p>
-            <div className="w-24 h-1 bg-[#A0522D]/20 mx-auto mb-6"></div>
-            <p className="max-w-2xl mx-auto text-stone-600 leading-relaxed">
-              Gracias por confiar en mis cuadernos. Aquí encontrarás todas las variantes disponibles de este diario, diseñadas con amor para atesorar tus secretos culinarios.
-            </p>
-          </motion.div>
-        </div>
-        
-        {/* Decorative Icons */}
-        <div className="absolute top-8 left-8 text-stone-300 hidden lg:block">
-          <Utensils size={48} />
-        </div>
-        <div className="absolute bottom-8 right-8 text-stone-300 hidden lg:block">
-          <ChefHat size={48} />
-        </div>
-      </header>
-
-      {/* Important Note Banner */}
-      <div className="bg-[#A0522D] text-white py-3 px-4 text-center overflow-hidden">
-        <motion.p 
-          animate={{ opacity: [0.7, 1, 0.7] }}
-          transition={{ duration: 3, repeat: Infinity }}
-          className="text-sm font-medium tracking-wide flex items-center justify-center gap-2"
-        >
-          <Book size={16} />
-          🔔 ¿Buscas más páginas? Todos los modelos disponibles hasta 202 páginas.
-        </motion.p>
+      {/* Top Banner Message */}
+      <div className="bg-[#A0522D] text-[#FAFAF9] py-2 px-4 shadow-sm relative z-10">
+        <p className="text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold text-center flex items-center justify-center gap-2">
+          <span className="animate-pulse">✨</span> ¿Buscas más páginas? Hasta 202 disponibles
+        </p>
       </div>
 
-      <main className="max-w-7xl mx-auto px-4 py-12 relative">
-        {/* Filters */}
-        <div className="flex flex-wrap justify-center gap-3 mb-12">
-          {SIZES.map((size) => (
+      {/* Header */}
+      <header className="bg-[#FAFAF9] pt-10 pb-8 px-6 text-center border-b border-stone-200">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h1 className="font-serif text-3xl md:text-4xl text-[#5A5A40] mb-2 tracking-tight">
+            📖 DIARIOS DE RECETAS
+          </h1>
+          <p className="font-serif italic text-[#A0522D] text-lg mb-4">
+            Elige tu próxima versión
+          </p>
+          <p className="text-sm text-stone-500 max-w-xs mx-auto leading-relaxed">
+            Gracias por confiar en mis cuadernos. Cada página está pensada para tus mejores momentos en la cocina.
+          </p>
+        </motion.div>
+      </header>
+
+      {/* Filter Navigation (Horizontal Scroll on Mobile) */}
+      <nav className="sticky top-0 bg-[#FAFAF9]/95 backdrop-blur-md border-b border-stone-200 z-40 py-4">
+        <div 
+          ref={scrollContainerRef}
+          className="flex overflow-x-auto no-scrollbar gap-3 px-6 scroll-smooth items-center justify-start md:justify-center"
+        >
+          {FILTER_OPTIONS.map((option) => (
             <button
-              key={size}
-              onClick={() => setFilter(size)}
+              key={option}
+              data-active={activeFilter === option}
+              onClick={() => setActiveFilter(option)}
               className={`
-                px-6 py-2.5 rounded-full border transition-all duration-300 text-sm font-medium
-                ${filter === size 
-                  ? 'bg-[#5A5A40] text-white border-[#5A5A40] shadow-md transform scale-105' 
-                  : 'bg-white text-[#5A5A40] border-stone-200 hover:border-[#5A5A40] hover:bg-stone-50'
+                whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 border
+                ${activeFilter === option 
+                  ? 'bg-[#5A5A40] text-white border-[#5A5A40] shadow-md' 
+                  : 'bg-white text-stone-600 border-stone-200 hover:border-stone-300'
                 }
               `}
             >
-              {size === 'Todos los tamaños' ? size : `${size} pulgadas`}
+              {option}
             </button>
           ))}
         </div>
+      </nav>
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          <AnimatePresence mode="popLayout">
-            {filteredProducts.map((product) => (
-              <motion.div
-                key={product.id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3 }}
-                whileHover={{ y: -8 }}
-                className="bg-white rounded-2xl p-6 shadow-sm border border-stone-100 flex flex-col items-center text-center group"
-              >
-                {/* Product Image Placeholder */}
+      {/* Main Content */}
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+        <AnimatePresence mode="wait">
+          {activeFilter === 'Todos los modelos' ? (
+            /* Summary View: 3 Cards */
+            <motion.div
+              key="summary"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            >
+              {MODELS.map((model) => (
                 <div 
-                  className="w-full aspect-[4/5] rounded-xl flex items-center justify-center text-6xl mb-6 transition-transform duration-500 group-hover:scale-110 relative overflow-hidden"
-                  style={{ backgroundColor: `${product.color}15` }}
+                  key={model.id}
+                  className="bg-white rounded-3xl overflow-hidden shadow-sm border border-stone-100 flex flex-col group h-full"
                 >
-                  <span className="relative z-10">{product.emoji}</span>
-                  {/* Decorative faint pattern */}
-                  <div className="absolute inset-0 opacity-10 flex flex-wrap gap-2 p-2 pointer-events-none">
-                    {Array.from({ length: 12 }).map((_, i) => (
-                      <BookOpen key={i} size={12} className="text-stone-400" />
-                    ))}
+                  <div className="relative aspect-[4/3] overflow-hidden bg-stone-100">
+                    <img 
+                      src={model.image} 
+                      alt={model.name}
+                      referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                  </div>
+                  
+                  <div className="p-8 flex flex-col flex-grow">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2.5 rounded-xl bg-stone-50 text-[#A0522D]">
+                        <Utensils size={20} />
+                      </div>
+                      <h3 className="font-serif text-2xl text-stone-800">Modelo {model.id}</h3>
+                    </div>
+
+                    <div className="space-y-3 mb-8 text-stone-600">
+                      <p className="text-sm flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-stone-300"></span>
+                        Tamaños: 6x9, 8x10, 8.5x11
+                      </p>
+                      <p className="text-sm flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-stone-300"></span>
+                        Páginas: {model.pageRange}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => setActiveFilter(`Modelo ${model.id}`)}
+                      className="mt-auto w-full min-h-[48px] bg-stone-100 hover:bg-stone-200 text-stone-800 font-bold rounded-2xl flex items-center justify-center gap-2 transition-all group/btn"
+                    >
+                      Ver variantes
+                      <ArrowRight size={18} className="transition-transform group-hover/btn:translate-x-1" />
+                    </button>
                   </div>
                 </div>
-
-                <div className="flex-grow">
-                  <h3 className="font-serif text-xl text-stone-800 mb-2">
-                    Diario de Recetas – Modelo {product.model}
-                  </h3>
-                  <div className="space-y-1 mb-6">
-                    <p className="text-sm text-stone-500 flex items-center justify-center gap-1.5 font-medium">
-                      <Search size={14} />
-                      Tamaño: {product.size} pulgadas
-                    </p>
-                    <p className="text-sm text-[#A0522D] font-medium italic">
-                      {product.pages} páginas
-                    </p>
+              ))}
+            </motion.div>
+          ) : (
+            /* Detailed View: 15 Cards per model */
+            <motion.div
+              key="details"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            >
+              {MODELS.find(m => `Modelo ${m.id}` === activeFilter)?.variants.map((variant) => {
+                const model = MODELS.find(m => `Modelo ${m.id}` === activeFilter)!;
+                return (
+                  <div 
+                    key={variant.id}
+                    className="bg-white rounded-3xl p-6 shadow-sm border border-stone-100 flex gap-5 items-center hover:shadow-md transition-shadow group"
+                  >
+                    <div className="w-24 h-24 flex-shrink-0 rounded-2xl overflow-hidden shadow-inner bg-stone-50 border border-stone-100">
+                      <img 
+                        src={model.image} 
+                        alt={model.name}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all"
+                      />
+                    </div>
+                    
+                    <div className="flex-grow">
+                      <h4 className="font-serif text-lg text-stone-800 mb-1 leading-tight">
+                        Modelo {model.id} – {variant.size}
+                      </h4>
+                      <p className="text-[#A0522D] text-sm font-bold mb-3 italic">
+                        {variant.pages} páginas
+                      </p>
+                      
+                      <button
+                        onClick={() => handleAmazonClick(`Modelo ${model.id} (${variant.size}, ${variant.pages} págs)`)}
+                        className="min-h-[44px] w-full bg-[#5A5A40] hover:bg-[#4A4A35] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors shadow-sm"
+                      >
+                        <ShoppingCart size={16} />
+                        Ver en Amazon
+                      </button>
+                    </div>
                   </div>
-                </div>
-
-                <button
-                  onClick={() => handleAmazonClick(`Modelo ${product.model} (${product.size})`)}
-                  className="w-full mt-auto bg-[#5A5A40] hover:bg-[#4A4A35] text-white py-3 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm group/btn"
-                >
-                  <ShoppingCart size={18} className="transition-transform group-hover/btn:scale-110" />
-                  Ver en Amazon
-                  <ExternalLink size={14} className="opacity-50" />
-                </button>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-
-        {/* Empty state if no products match */}
-        {filteredProducts.length === 0 && (
-          <div className="text-center py-20">
-            <p className="text-stone-500 italic">No se encontraron diarios con este formato.</p>
-          </div>
-        )}
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
+      {/* Decorative Floating Icon (Mobile only corner) */}
+      <div className="fixed bottom-24 right-6 pointer-events-none text-stone-300/30 md:hidden">
+        <ChefHat size={64} />
+      </div>
+
       {/* Footer */}
-      <footer className="bg-[#FAFAF9] border-t border-stone-200 mt-20 py-12 px-4 shadow-inner">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="flex justify-center gap-6 mb-8">
+      <footer className="bg-[#FAFAF9] border-t border-stone-200 mt-20 py-12 px-8">
+        <div className="max-w-xl mx-auto text-center space-y-8">
+          <div className="space-y-3">
+            <h4 className="flex items-center justify-center gap-2 text-stone-400 font-medium">
+              <Mail size={16} />
+              ¿Sugerencias?
+            </h4>
+            <a 
+              href="mailto:misrecetas@diarios.com" 
+              className="text-[#A0522D] hover:underline font-serif italic text-lg decoration-stone-200"
+            >
+              misrecetas@diarios.com
+            </a>
+          </div>
+
+          <div className="flex justify-center gap-8">
             <button 
               onClick={() => handleSocialClick('Instagram')}
-              className="text-[#5A5A40] hover:text-[#A0522D] transition-colors"
+              className="w-12 h-12 rounded-2xl bg-stone-100 text-[#5A5A40] flex items-center justify-center hover:bg-stone-200 transition-colors"
+              aria-label="Instagram"
             >
-              <Instagram size={28} />
+              <Instagram size={22} />
             </button>
             <button 
               onClick={() => handleSocialClick('Pinterest')}
-              className="text-[#5A5A40] hover:text-[#A0522D] transition-colors"
+              className="w-12 h-12 rounded-2xl bg-stone-100 text-[#5A5A40] flex items-center justify-center hover:bg-stone-200 transition-colors"
+              aria-label="Pinterest"
             >
-              <Pinterest size={28} />
+              <Pinterest size={22} />
             </button>
           </div>
-          
-          <div className="space-y-4">
-            <p className="text-stone-600">
-              ¿Tienes sugerencias para nuevos formatos? Escríbeme a{' '}
-              <a href="mailto:hola@diariosderecetas.com" className="text-[#A0522D] hover:underline font-medium">
-                hola@diariosderecetas.com
-              </a>
-            </p>
-            <div className="w-12 h-px bg-stone-300 mx-auto"></div>
-            <p className="text-xs text-stone-400 uppercase tracking-widest">
-              © 2026 Diarios de Recetas – Cultivando Momentos
+
+          <div className="pt-8 border-t border-stone-100">
+            <p className="text-[10px] uppercase tracking-widest text-stone-400">
+             © 2026 Diarios de Recetas • Hecho con amor para amantes de la cocina
             </p>
           </div>
         </div>
       </footer>
+
+      {/* Persistent Helper Button (Optional floating note) */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <button 
+          onClick={() => alert("¡Hola! Explora las variantes deslizando los filtros o seleccionando un modelo.")}
+          className="w-12 h-12 rounded-full bg-white shadow-lg border border-stone-200 text-[#A0522D] flex items-center justify-center hover:scale-110 active:scale-95 transition-transform"
+        >
+          <Info size={20} />
+        </button>
+      </div>
     </div>
   );
 }
