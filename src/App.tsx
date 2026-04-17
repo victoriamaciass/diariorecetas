@@ -3,14 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   BrowserRouter as Router, 
   Routes, 
   Route, 
   Link, 
   useParams, 
-  useNavigate 
+  useNavigate,
+  useLocation
 } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -18,9 +19,12 @@ import {
   Instagram, 
   Pin as Pinterest, 
   ChevronLeft,
+  ChevronRight,
   Mail,
-  Book,
-  Utensils
+  Home,
+  Target,
+  Maximize,
+  LayoutGrid
 } from 'lucide-react';
 
 // --- Types ---
@@ -28,8 +32,7 @@ interface Model {
   id: number;
   name: string;
   image: string;
-  color: string;
-  emoji: string;
+  description: string;
 }
 
 // --- Data ---
@@ -38,23 +41,28 @@ const MODELS: Model[] = [
     id: 1,
     name: 'Modelo 1',
     image: 'https://i.ibb.co/pBdM3rJK/1-modelo-recetas.jpg',
-    color: '#A0522D', // Terracotta
-    emoji: '🍲'
+    description: 'Diseño clásico. Perfecto para recetas tradicionales.'
   },
   {
     id: 2,
     name: 'Modelo 2',
     image: 'https://i.ibb.co/0Vq1Wfxz/2-modelo-recetas.jpg',
-    color: '#5A5A40', // Olive
-    emoji: '🥘'
+    description: 'Diseño moderno. Ideal para recetas creativas y fusión.'
   },
   {
     id: 3,
     name: 'Modelo 3',
     image: 'https://i.ibb.co/QjtQSm2b/3-modelo-recetas.jpg',
-    color: '#8B4513', // Brown
-    emoji: '👩‍🍳'
+    description: 'Diseño rústico. Para los amantes de la cocina casera.'
   }
+];
+
+const RANDOM_PHRASES = [
+  "Cocinar es amor hecho visible. ¿Qué receta guardarás hoy?",
+  "Cada página en blanco es una nueva aventura en tu cocina.",
+  "Tus mejores recetas merecen un lugar especial.",
+  "Un diario de recetas es el legado de los sabores que amas.",
+  "La cocina es el corazón del hogar. Llena estas páginas de vida."
 ];
 
 const FORMATS = ['6x9', '8x10', '8.5x11'];
@@ -62,24 +70,67 @@ const PAGES = [102, 122, 132, 152, 202];
 
 // --- Components ---
 
-const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const Breadcrumb = () => {
+  const { modeloId, formatoId } = useParams();
+  const location = useLocation();
+  const model = MODELS.find(m => m.id === Number(modeloId));
+
+  if (location.pathname === '/') return null;
+
   return (
-    <div className="min-h-screen bg-[#f5f5f0] font-sans text-stone-800 selection:bg-[#A0522D]/20 relative overflow-x-hidden">
+    <nav className="flex items-center gap-2 text-stone-400 text-xs md:text-sm font-medium mb-6 flex-wrap">
+      <Link to="/" className="hover:text-[#A0522D] transition-colors flex items-center gap-1">
+        Inicio
+      </Link>
+      
+      {modeloId && (
+        <>
+          <ChevronRight size={14} className="text-stone-300" />
+          {formatoId ? (
+            <Link to={`/modelo/${modeloId}`} className="hover:text-[#A0522D] transition-colors">
+              {model?.name || `Modelo ${modeloId}`}
+            </Link>
+          ) : (
+            <span className="text-stone-600 font-bold">{model?.name || `Modelo ${modeloId}`}</span>
+          )}
+        </>
+      )}
+
+      {formatoId && (
+        <>
+          <ChevronRight size={14} className="text-stone-300" />
+          <span className="text-stone-600 font-bold">Formato {formatoId}</span>
+        </>
+      )}
+    </nav>
+  );
+};
+
+const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const navigate = useNavigate();
+  
+  return (
+    <div className="min-h-screen bg-[#f5f5f0] font-sans text-stone-800 selection:bg-[#A0522D]/20 relative overflow-x-hidden flex flex-col">
       {/* Texture Overlay */}
       <div className="fixed inset-0 pointer-events-none opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] z-50"></div>
 
-      {/* Top Banner Message */}
-      <div className="bg-[#A0522D] text-[#FAFAF9] py-2 px-4 shadow-sm relative z-10">
-        <p className="text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold text-center flex items-center justify-center gap-1.5 leading-none">
-          ✨ ¿Buscas más páginas? Hasta 202 disponibles
-        </p>
+      <div className="flex-grow flex flex-col relative z-30">
+        {children}
       </div>
 
-      {children}
-
       {/* Footer Section */}
-      <footer className="bg-[#FAFAF9] border-t border-stone-200 mt-20 py-16 px-8 relative z-10 text-center">
+      <footer className="bg-[#FAFAF9] border-t border-stone-200 py-16 px-8 relative z-40 text-center mt-auto">
         <div className="max-w-2xl mx-auto space-y-10">
+          <div className="pb-6">
+            <button 
+              onClick={() => navigate('/')}
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-stone-100 hover:bg-stone-200 text-[#5A5A40] font-bold rounded-full transition-all active:scale-95 shadow-sm text-sm"
+            >
+              <Home size={18} />
+              Volver al inicio
+            </button>
+          </div>
+
           <div className="space-y-4">
             <h4 className="flex items-center justify-center gap-2 text-stone-300 font-bold uppercase tracking-[0.2em] text-[10px]">
               <Mail size={16} />
@@ -93,25 +144,13 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             </a>
           </div>
 
-          <div className="flex justify-center gap-6">
-            <button 
-              onClick={() => alert("Enlace a Instagram")}
-              className="w-14 h-14 rounded-2xl bg-stone-50 text-[#5A5A40] flex items-center justify-center hover:bg-white hover:shadow-md transition-all border border-stone-100"
-              aria-label="Instagram"
-            >
-              <Instagram size={24} />
-            </button>
-            <button 
-              onClick={() => alert("Enlace a Pinterest")}
-              className="w-14 h-14 rounded-2xl bg-stone-50 text-[#5A5A40] flex items-center justify-center hover:bg-white hover:shadow-md transition-all border border-stone-100"
-              aria-label="Pinterest"
-            >
-              <Pinterest size={24} />
-            </button>
+          <div className="flex justify-center gap-8">
+            <button onClick={() => alert("Instagram")} className="text-stone-400 hover:text-[#E1306C] transition-colors"><Instagram size={24} /></button>
+            <button onClick={() => alert("Pinterest")} className="text-stone-400 hover:text-[#BD081C] transition-colors"><Pinterest size={24} /></button>
           </div>
 
           <div className="pt-10 border-t border-stone-100 italic text-[10px] uppercase tracking-[0.3em] text-stone-300 font-medium">
-             © 2026 Diarios de Recetas • Cultivando Momentos
+             © 2026 DIARIOS DE RECETAS • CULTIVANDO MOMENTOS
           </div>
         </div>
       </footer>
@@ -121,34 +160,43 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 // --- Page 1: Home ---
 const HomePage = () => {
+  const [phrase, setPhrase] = useState("");
+
+  useEffect(() => {
+    const randomIndex = Math.floor(Math.random() * RANDOM_PHRASES.length);
+    setPhrase(RANDOM_PHRASES[randomIndex]);
+  }, []);
+
   return (
     <motion.div 
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="max-w-6xl mx-auto px-6 py-12"
+      className="max-w-6xl mx-auto px-6 py-16 w-full"
     >
       <header className="text-center mb-16">
         <h1 className="font-serif text-3xl md:text-5xl text-[#5A5A40] mb-4 tracking-tight">
-          DIARIOS DE RECETAS
+          📖 DIARIOS DE RECETAS
         </h1>
-        <p className="font-serif italic text-[#A0522D] text-xl">
-          Elige un modelo
+        <p className="text-[#A0522D] font-serif text-xl md:text-2xl mb-4">
+          Elige el modelo que más te inspire
         </p>
-        <div className="w-16 h-0.5 bg-stone-200 mx-auto mt-6"></div>
+        <p className="italic text-stone-400 font-serif max-w-lg mx-auto text-lg leading-relaxed">
+          "{phrase}"
+        </p>
+        <div className="w-16 h-0.5 bg-stone-200 mx-auto mt-10"></div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
         {MODELS.map((model) => (
           <div key={model.id} className="bg-white rounded-[2rem] overflow-hidden shadow-sm border border-stone-100 flex flex-col group h-full transition-all hover:shadow-md">
-            <div className="relative aspect-square flex items-center justify-center text-8xl bg-stone-100 overflow-hidden">
+            <div className="aspect-square relative overflow-hidden">
               <img 
                 src={model.image} 
                 alt=""
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 referrerPolicy="no-referrer"
               />
-              <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors"></div>
             </div>
             <div className="p-8 text-center flex flex-col flex-grow">
               <h3 className="font-serif text-2xl text-stone-800 mb-6">{model.name}</h3>
@@ -172,7 +220,7 @@ const ModelFormatsPage = () => {
   const navigate = useNavigate();
   const model = MODELS.find(m => m.id === Number(modeloId));
 
-  if (!model) return <div className="p-20 text-center">Modelo no encontrado</div>;
+  if (!model) return <div className="p-20 text-center font-serif text-xl">Modelo no encontrado</div>;
 
   return (
     <motion.div 
@@ -181,16 +229,28 @@ const ModelFormatsPage = () => {
       exit={{ opacity: 0, x: -20 }}
       className="max-w-2xl mx-auto px-6 py-12"
     >
-      <button 
-        onClick={() => navigate('/')}
-        className="flex items-center gap-2 text-stone-400 hover:text-stone-600 font-medium transition-colors mb-12"
-      >
-        <ChevronLeft size={20} />
-        Volver
-      </button>
+      <Breadcrumb />
+      
+      {/* Quick Actions Nivel 2 */}
+      <div className="flex gap-3 mb-12">
+        <button 
+          onClick={() => navigate('/')}
+          className="flex-1 flex items-center justify-center gap-2 py-3 bg-white rounded-2xl border border-stone-200 text-stone-500 text-xs font-bold hover:border-[#A0522D] transition-colors shadow-sm"
+        >
+          <Target size={14} className="text-[#A0522D]" />
+          Cambiar de modelo
+        </button>
+        <button 
+          onClick={() => navigate('/')}
+          className="flex-1 flex items-center justify-center gap-2 py-3 bg-white rounded-2xl border border-stone-200 text-stone-500 text-xs font-bold hover:border-stone-400 transition-colors shadow-sm"
+        >
+          <ChevronLeft size={14} />
+          Atrás
+        </button>
+      </div>
 
-      <div className="text-center mb-12">
-        <div className="w-40 h-40 mx-auto rounded-[2.5rem] overflow-hidden shadow-xl border-4 border-white mb-8 bg-white flex items-center justify-center text-7xl">
+      <div className="text-center mb-16">
+        <div className="w-[200px] h-[200px] mx-auto rounded-[2.5rem] overflow-hidden shadow-xl border-4 border-white mb-10 bg-white">
           <img 
             src={model.image} 
             alt={model.name}
@@ -198,8 +258,11 @@ const ModelFormatsPage = () => {
             referrerPolicy="no-referrer"
           />
         </div>
-        <h2 className="font-serif text-4xl text-stone-800 mb-2">{model.name}</h2>
-        <p className="text-[#A0522D] font-serif italic text-xl">Elige el formato</p>
+        <h2 className="font-serif text-4xl text-stone-800 mb-4">{model.name}</h2>
+        <p className="text-stone-500 italic text-lg mb-8">
+          {model.description}
+        </p>
+        <h3 className="text-xl font-serif text-[#A0522D] opacity-80 uppercase tracking-widest text-sm font-bold">Elige el formato de tu diario</h3>
       </div>
 
       <div className="space-y-4">
@@ -207,18 +270,11 @@ const ModelFormatsPage = () => {
           <Link 
             key={format}
             to={`/modelo/${model.id}/formato/${format}`}
-            className="block p-6 bg-[#5A5A40] hover:bg-[#4A4A35] text-white rounded-3xl shadow-sm hover:shadow-md transition-all active:scale-[0.98] group"
+            className="block p-7 bg-[#5A5A40] hover:bg-[#4A4A35] text-white rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-[0.98] group"
           >
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-white/10 rounded-xl text-white">
-                  <Book size={24} />
-                </div>
-                <span className="font-serif text-xl">{format} pulgadas</span>
-              </div>
-              <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white/50 group-hover:text-white transition-colors">
-                <ArrowRightIcon />
-              </div>
+              <span className="font-serif text-xl">{format} pulgadas</span>
+              <ChevronRight size={20} className="text-white/50 group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>
         ))}
@@ -233,7 +289,7 @@ const FormatPagesPage = () => {
   const navigate = useNavigate();
   const model = MODELS.find(m => m.id === Number(modeloId));
 
-  if (!model) return <div className="p-20 text-center">Modelo no encontrado</div>;
+  if (!model) return <div className="p-20 text-center font-serif text-xl font-bold">Modelo no encontrado</div>;
 
   return (
     <motion.div 
@@ -242,16 +298,35 @@ const FormatPagesPage = () => {
       exit={{ opacity: 0, x: -20 }}
       className="max-w-2xl mx-auto px-6 py-12"
     >
-      <button 
-        onClick={() => navigate(`/modelo/${modeloId}`)}
-        className="flex items-center gap-2 text-stone-400 hover:text-stone-600 font-medium transition-colors mb-12"
-      >
-        <ChevronLeft size={20} />
-        Volver
-      </button>
+      <Breadcrumb />
 
-      <div className="text-center mb-12">
-        <div className="w-40 h-40 mx-auto rounded-[2.5rem] overflow-hidden shadow-xl border-4 border-white mb-8 bg-white flex items-center justify-center text-7xl">
+      {/* Quick Actions Nivel 3 */}
+      <div className="flex gap-2 mb-12 overflow-x-auto no-scrollbar pb-2">
+        <button 
+          onClick={() => navigate('/')}
+          className="whitespace-nowrap flex items-center gap-2 px-6 py-3 bg-white rounded-2xl border border-stone-200 text-stone-500 text-xs font-bold hover:border-[#A0522D] transition-colors shadow-sm"
+        >
+          <Target size={14} className="text-[#A0522D]" />
+          Otro modelo
+        </button>
+        <button 
+          onClick={() => navigate(`/modelo/${modeloId}`)}
+          className="whitespace-nowrap flex items-center gap-2 px-6 py-3 bg-white rounded-2xl border border-stone-200 text-stone-500 text-xs font-bold hover:border-[#5A5A40] transition-colors shadow-sm"
+        >
+          <LayoutGrid size={14} className="text-[#5A5A40]" />
+          Otro formato
+        </button>
+        <button 
+          onClick={() => navigate(`/modelo/${modeloId}`)}
+          className="whitespace-nowrap flex items-center gap-2 px-6 py-3 bg-white rounded-2xl border border-stone-200 text-stone-500 text-xs font-bold hover:border-stone-400 transition-colors shadow-sm"
+        >
+          <ChevronLeft size={14} />
+          Atrás
+        </button>
+      </div>
+
+      <div className="text-center mb-16">
+        <div className="w-[200px] h-[200px] mx-auto rounded-[2.5rem] overflow-hidden shadow-xl border-4 border-white mb-10 bg-white">
           <img 
             src={model.image} 
             alt={model.name}
@@ -259,20 +334,23 @@ const FormatPagesPage = () => {
             referrerPolicy="no-referrer"
           />
         </div>
-        <h2 className="font-serif text-3xl md:text-4xl text-stone-800 mb-2">{model.name} - Formato {formatoId}</h2>
-        <p className="text-[#A0522D] font-serif italic text-xl">Elige el número de páginas</p>
+        <h2 className="font-serif text-3xl md:text-4xl text-stone-800 mb-2">{model.name} - {formatoId}</h2>
+        <p className="text-[#A0522D] font-serif italic text-lg mb-8 leading-relaxed">
+          Más páginas, más recetas. Elige la que mejor se adapte a tu ritmo.
+        </p>
+        <h3 className="text-2xl font-serif text-[#5A5A40] opacity-80 uppercase tracking-widest text-sm font-bold">¿Cuántas páginas necesitas?</h3>
       </div>
 
       <div className="space-y-4">
         {PAGES.map((pages) => (
           <button 
             key={pages}
-            onClick={() => alert(`Comprar: ${model.name} - Formato ${formatoId} - ${pages} páginas. Enlace Amazon: (sustituir por URL real)`)}
+            onClick={() => alert(`Comprar: ${model.name} - Formato ${formatoId} - ${pages} páginas`)}
             className="w-full p-6 bg-[#5A5A40] hover:bg-[#4A4A35] text-white rounded-2xl shadow-sm transition-all active:scale-[0.98] flex items-center justify-between group"
           >
-            <span className="font-serif text-lg">{pages} páginas</span>
-            <div className="flex items-center gap-2 text-white/70 font-bold text-sm uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-              Comprar <ShoppingCart size={16} />
+            <span className="font-serif text-xl">{pages} páginas</span>
+            <div className="flex items-center gap-2 text-white/50 font-bold text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+              Seleccionar <ShoppingCart size={16} />
             </div>
           </button>
         ))}
@@ -280,10 +358,6 @@ const FormatPagesPage = () => {
     </motion.div>
   );
 };
-
-const ArrowRightIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-);
 
 // --- App Entry Point ---
 
