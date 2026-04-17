@@ -131,25 +131,31 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             </button>
           </div>
 
-          <div className="space-y-4">
-            <h4 className="flex items-center justify-center gap-2 text-stone-300 font-bold uppercase tracking-[0.2em] text-[10px]">
-              <Mail size={16} />
-              ¿Sugerencias?
-            </h4>
-            <a 
-              href="mailto:misrecetas@diarios.com" 
-              className="text-[#A0522D] hover:underline font-serif italic text-xl decoration-stone-200 block"
+          <a 
+            href="https://taplink.cc/victoriamaciass"
+            target="_blank"
+            rel="nofollow noopener noreferrer"
+            className="group space-y-6 flex flex-col items-center inline-block"
+          >
+            <motion.div 
+              whileHover={{ scale: 1.05, rotate: 2 }}
+              className="w-24 h-24 rounded-full overflow-hidden shadow-md border-2 border-stone-200 bg-stone-50 transition-shadow group-hover:shadow-lg"
             >
-              misrecetas@diarios.com
-            </a>
-          </div>
+              <img 
+                src="https://i.ibb.co/zC2K7nK/victoria-maciass.jpg" 
+                alt="Victoria Maciass"
+                className="w-full h-full object-cover"
+                referrerPolicy="no-referrer"
+              />
+            </motion.div>
+            <div className="space-y-2">
+              <span className="text-stone-400 font-bold uppercase tracking-[0.2em] text-[11px] group-hover:text-[#A0522D] transition-colors">
+                Victoria Maciass
+              </span>
+            </div>
+          </a>
 
-          <div className="flex justify-center gap-8">
-            <button onClick={() => alert("Instagram")} className="text-stone-400 hover:text-[#E1306C] transition-colors"><Instagram size={24} /></button>
-            <button onClick={() => alert("Pinterest")} className="text-stone-400 hover:text-[#BD081C] transition-colors"><Pinterest size={24} /></button>
-          </div>
-
-          <div className="pt-10 border-t border-stone-100 italic text-[10px] uppercase tracking-[0.3em] text-stone-300 font-medium">
+          <div className="pt-10 border-t border-stone-100 italic text-[10px] uppercase tracking-[0.3em] text-stone-300 font-medium font-serif">
              © 2026 DIARIOS DE RECETAS • CULTIVANDO MOMENTOS
           </div>
         </div>
