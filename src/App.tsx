@@ -66,7 +66,13 @@ const RANDOM_PHRASES = [
 ];
 
 const FORMATS = ['6x9', '8x10', '8.5x11'];
-const PAGES = [102, 122, 132, 152, 202];
+const PAGES = [102, 120, 132, 152, 202];
+
+// Mapping for specific product links
+const AMAZON_LINKS: Record<string, string> = {
+  "1-6x9-108": "https://www.amazon.com/dp/B0C9SDHGNR",
+  "1-6x9-120": "https://www.amazon.com/dp/B09LB3PC83",
+};
 
 // --- Components ---
 
@@ -348,18 +354,39 @@ const FormatPagesPage = () => {
       </div>
 
       <div className="space-y-4">
-        {PAGES.map((pages) => (
-          <button 
-            key={pages}
-            onClick={() => alert(`Comprar: ${model.name} - Formato ${formatoId} - ${pages} páginas`)}
-            className="w-full p-6 bg-[#5A5A40] hover:bg-[#4A4A35] text-white rounded-2xl shadow-sm transition-all active:scale-[0.98] flex items-center justify-between group"
-          >
-            <span className="font-serif text-xl">{pages} páginas</span>
-            <div className="flex items-center gap-2 text-white/50 font-bold text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-              Seleccionar <ShoppingCart size={16} />
-            </div>
-          </button>
-        ))}
+        {PAGES.map((pages) => {
+          // Exception for Modelo 1 - 6x9 - 102 -> 108 pages
+          const displayedPages = (modeloId === '1' && formatoId === '6x9' && pages === 102) ? 108 : pages;
+          
+          const productKey = `${modeloId}-${formatoId}-${displayedPages}`;
+          const amazonUrl = AMAZON_LINKS[productKey];
+
+          const handlePurchase = () => {
+            if (amazonUrl) {
+              window.open(amazonUrl, '_blank', 'nofollow noopener noreferrer');
+            } else {
+              alert(`Comprar: ${model.name} - Formato ${formatoId} - ${displayedPages} páginas`);
+            }
+          };
+
+          return (
+            <button 
+              key={pages}
+              onClick={handlePurchase}
+              className="w-full p-6 bg-[#5A5A40] hover:bg-[#4A4A35] text-white rounded-2xl shadow-sm transition-all active:scale-[0.98] flex items-center justify-between group"
+            >
+              <div className="flex flex-col items-start">
+                <span className="font-serif text-xl">{displayedPages} páginas</span>
+                {amazonUrl && (
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-white/40 mt-1">Directo desde Amazon</span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 text-white/50 font-bold text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+                {amazonUrl ? 'Comprar' : 'Seleccionar'} <ShoppingCart size={16} />
+              </div>
+            </button>
+          );
+        })}
       </div>
     </motion.div>
   );
