@@ -141,7 +141,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             href="https://taplink.cc/victoriamaciass"
             target="_blank"
             rel="nofollow noopener noreferrer"
-            className="group space-y-6 flex flex-col items-center inline-block"
+            className="group space-y-4 flex flex-col items-center w-fit mx-auto"
           >
             <motion.div 
               whileHover={{ scale: 1.05, rotate: 2 }}
