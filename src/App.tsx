@@ -361,28 +361,33 @@ const FormatPagesPage = () => {
           const productKey = `${modeloId}-${formatoId}-${displayedPages}`;
           const amazonUrl = AMAZON_LINKS[productKey];
 
-          const handlePurchase = () => {
-            if (amazonUrl) {
-              window.open(amazonUrl, '_blank', 'nofollow noopener noreferrer');
-            } else {
-              alert(`Comprar: ${model.name} - Formato ${formatoId} - ${displayedPages} páginas`);
-            }
-          };
-
-          return (
-            <button 
+          return amazonUrl ? (
+            <a 
               key={pages}
-              onClick={handlePurchase}
+              href={amazonUrl}
+              target="_blank"
+              rel="nofollow noopener noreferrer"
               className="w-full p-6 bg-[#5A5A40] hover:bg-[#4A4A35] text-white rounded-2xl shadow-sm transition-all active:scale-[0.98] flex items-center justify-between group"
             >
               <div className="flex flex-col items-start">
                 <span className="font-serif text-xl">{displayedPages} páginas</span>
-                {amazonUrl && (
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-white/40 mt-1">Directo desde Amazon</span>
-                )}
+                <span className="text-[10px] uppercase font-bold tracking-widest text-white/40 mt-1">Directo desde Amazon</span>
               </div>
               <div className="flex items-center gap-2 text-white/50 font-bold text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-                {amazonUrl ? 'Comprar' : 'Seleccionar'} <ShoppingCart size={16} />
+                Comprar <ShoppingCart size={16} />
+              </div>
+            </a>
+          ) : (
+            <button 
+              key={pages}
+              onClick={() => alert(`Comprar: ${model.name} - Formato ${formatoId} - ${displayedPages} páginas`)}
+              className="w-full p-6 bg-[#5A5A40] hover:bg-[#4A4A35] text-white rounded-2xl shadow-sm transition-all active:scale-[0.98] flex items-center justify-between group"
+            >
+              <div className="flex flex-col items-start">
+                <span className="font-serif text-xl">{displayedPages} páginas</span>
+              </div>
+              <div className="flex items-center gap-2 text-white/50 font-bold text-xs uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+                Seleccionar <ShoppingCart size={16} />
               </div>
             </button>
           );
