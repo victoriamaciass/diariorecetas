@@ -72,6 +72,9 @@ const PAGES = [102, 120, 132, 152, 202];
 const AMAZON_LINKS: Record<string, string> = {
   "1-6x9-108": "https://www.amazon.com/dp/B0C9SDHGNR",
   "1-6x9-120": "https://www.amazon.com/dp/B09LB3PC83",
+  "1-6x9-132": "https://www.amazon.com/dp/B0GXZ2JB29",
+  "1-6x9-152": "https://www.amazon.com/dp/B0GXYWHC5Q",
+  "1-6x9-202": "https://www.amazon.com/dp/B0GXZ345PY",
 };
 
 // --- Components ---
